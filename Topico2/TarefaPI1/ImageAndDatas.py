@@ -7,6 +7,7 @@ obj_img = cv2.imread("D:\Desktop\Documents\GitHub\Processamento_de_Imagem\Topico
 #imprime a imagem na janela
 cv2.imshow('Imagem', obj_img)
 
+
 #shape retira as dimencoes da imagem e guarda e, vetores
 dimensions = obj_img.shape
 #vetor [0] possui a altura do objeto
