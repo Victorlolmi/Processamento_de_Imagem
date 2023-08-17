@@ -33,6 +33,12 @@ def numero_para_string(numero):
             return centenas[numero // 100]
         else:
             return centenas[numero // 100] + " e " + numero_para_string(numero % 100)
+    elif numero < 1000000:
+            #verifica se reta zero na divisao assim sendo numero exato, caso n faz uma recursividade achando a centena e dps a dezena
+            if numero % 1000 == 0:
+                return numero_para_string(numero // 1000) + " mil"
+            else:
+                return numero_para_string(numero // 1000) + " mil e " + numero_para_string(numero % 1000)
 
 
 while True:
