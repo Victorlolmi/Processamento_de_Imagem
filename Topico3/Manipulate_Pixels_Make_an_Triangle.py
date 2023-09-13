@@ -12,20 +12,8 @@ def insert_black_triangle(image,p1, p2, p3):
     #np.int32 serve apenas para especificar o tipo de dado do elemento dentro do array
     pts = np.array([p1, p2, p3], np.int32)
     
-    # Cria uma máscara preta do mesmo tamanho da imagem pegando apenas largura e altura
-    mask = np.zeros(image.shape[:2], dtype=np.uint8)
-    
-    # Pinta o triângulo de branco na máscara
-    cv2.fillPoly(mask, [pts], 255)
-    
-    # Cria uma imagem preta do mesmo tamanho da imagem original
-    black_triangle = np.zeros_like(image)
-    
-    # Pinta o interior do triângulo com preto na imagem preta
-    cv2.fillPoly(black_triangle, [pts], (0, 0, 0))
-    
-    # Combina a imagem preta com o triângulo preto usando a máscara
-    result = cv2.bitwise_or(image, black_triangle, mask=~mask)
+   #PINTA O TRIANGULO
+    result = cv2.fillPoly(image, [pts], 0)
     
     
     return result
