@@ -1,15 +1,18 @@
 import cv2
 import numpy as np
 
-img = cv2.imread("Topico3\imgs\green_image.png")
+img = cv2.imread("Topico3\imgs\garnet.jpg")
 
 #Extrai canais de cores
 red_channel = img[:, :, 2]
 green_channel = img[:, :, 1]
 blue_channel = img[:, :, 0]
 
+black = np.zeros(img.shape, np.uint8)
+black[:, :, 2] = red_channel
 
-cv2.imshow("Canal vermelho", red_channel)
+cv2.imshow("Canal vermelho", black)
+#cv2.imshow("Canal vermelho", red_channel)
 cv2.imshow("Canal Azul", blue_channel)
 cv2.imshow("Canal Verde", green_channel)
 

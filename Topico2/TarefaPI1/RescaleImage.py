@@ -19,7 +19,7 @@ def rescaleImage(image, scale_percent):
     return resized_image
 
 
-obj_img = cv2.imread("D:\Desktop\Documents\GitHub\Processamento_de_Imagem\Topico2\TarefaPI1\imgs\Mountain 4K.jpg")
+obj_img = cv2.imread("Topico2\TarefaPI1\imgs\green_image.png")
 # cv2.imshow(obj_img)
 scale_percent = int(input("Digite a scala"))
 
