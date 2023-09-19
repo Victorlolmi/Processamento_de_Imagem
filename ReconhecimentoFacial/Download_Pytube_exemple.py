@@ -1,12 +1,5 @@
-from pytube import YouTube
+import subprocess
 
-url = "https://www.youtube.com/watch?v=dt7puHrnGbc"
+url = "https://www.youtube.com/watch?v=vLgPDS5vn2g"
 
-try:
-    yt = YouTube(url)
-    stream = yt.streams.get_highest_resolution()  # Escolhe a melhor resolução disponível
-    print(f"Baixando vídeo: {yt.title}")
-    stream.download()
-    print("Download concluído!")
-except Exception as e:
-    print(f"Ocorreu um erro: {str(e)}")
+subprocess.run(["youtube-dlc", url])
