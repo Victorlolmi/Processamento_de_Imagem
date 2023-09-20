@@ -1,0 +1,12 @@
+import cv2
+from deepface import DeepFace
+
+#ler imagem
+imagem = cv2.imread("ReconhecimentoFacial\Leon\img5.png")
+
+#passar a imagem para o DeepFace
+
+resultado = DeepFace.analyze(imagem, actions=("age", "emotion"))
+#ver os resultados da analise
+
+print(resultado)
