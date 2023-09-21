@@ -3,7 +3,7 @@ import numpy as np
 
 #carrega imagens
 
-original_img = cv2.imread("D:\Desktop\Documents\GitHub\Processamento_de_Imagem\Topico4\imgs\cabelo_ruivo.png")
+original_img = cv2.imread("Topico4\imgs\cabelo_ruivo.png")
 mask_img = cv2.imread("Topico4\imgs\mask.png")
 
 final_img = cv2.addWeighted(original_img, 0.5, mask_img, 0.5, 0)
