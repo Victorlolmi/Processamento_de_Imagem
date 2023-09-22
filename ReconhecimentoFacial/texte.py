@@ -141,113 +141,103 @@ def calculate_face_features(image_path, face_cascade):
     else:
         return None
 
-def generateEncodings(folderName, labelName, knownEncodings, knownNames):
-    # Inicialize o modelo Haar Cascade para detecção de faces
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-    for filename in os.listdir(folderName):
-        imagePath = os.path.join(folderName, filename)
-        features = calculate_face_features(imagePath, face_cascade)
-        if features is not None:
-            knownEncodings.append(features)
-            knownNames.append(labelName)
+# Função para calcular os encodings faciais de uma pasta de imagens usando DeepFace
+def calculate_face_encodings(folder_name):
+    known_encodings = []
+    known_names = []
 
-# Exemplo de uso:
-knownEncodings = []
-knownNames = []
+    for filename in os.listdir(folder_name):
+        image_path = os.path.join(folder_name, filename)
 
-folderName = "ReconhecimentoFacial\Past_Leon"
-labelName = "Leon"
-generateEncodings(folderName, labelName, knownEncodings, knownNames)
+        # Use o DeepFace para calcular os encodings faciais
+        detected_faces = DeepFace.analyze(image_path, actions=['deep_face'], enforce_detection=False)
 
-folderName = "ReconhecimentoFacial\Past_Nilce"
-labelName = "nilce"
-generateEncodings(folderName, labelName, knownEncodings, knownNames)
+        if 'deep_face' in detected_faces:
+            # Adicione os encodings e nomes conhecidos
+            known_encodings.append(detected_faces['deep_face'])
+            known_names.append(filename.split('.')[0])  # Use o nome do arquivo como o nome conhecido
 
-data_encoding = {"encodings": knownEncodings, "names": knownNames}
+    return known_encodings, known_names
+
+# Diretórios das pastas com as imagens de referência
+folder_name_leon = 'ReconhecimentoFacial/Past_Leon'
+folder_name_nilce = 'ReconhecimentoFacial/Past_Nilce'
+
+# Calcule os encodings faciais para as imagens de referência
+encodings_leon, names_leon = calculate_face_encodings(folder_name_leon)
+encodings_nilce, names_nilce = calculate_face_encodings(folder_name_nilce)
+
+# Salve os encodings e nomes em um arquivo
+data_encoding = {"encodings_leon": encodings_leon, "names_leon": names_leon, "encodings_nilce": encodings_nilce, "names_nilce": names_nilce}
 
 with open("face_encodings.pkl", "wb") as f:
     pickle.dump(data_encoding, f)
 
+# Carregue o arquivo de encodings
+data_encoding = pickle.load(open("face_encodings.pkl", "rb"))
 
-
-from tqdm import tqdm
-
-# Carrega arquivo binário contendo faces codificadas
-data_encoding = pickle.loads(open("face_encodings.pkl", "rb").read())
-
-# Carrega vídeo do disco
+# Carregue o vídeo do disco
 video_filename = "ReconhecimentoFacial/download/leon&nilce.mp4"
-videoCaptureInput = cv2.VideoCapture(video_filename)
+video_capture_input = cv2.VideoCapture(video_filename)
 
-# Define o tamanho do vídeo de saída
-output_width = int(videoCaptureInput.get(cv2.CAP_PROP_FRAME_WIDTH))
-output_height = int(videoCaptureInput.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# Inicialize o classificador Haar Cascade para detecção de faces
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-# Define o codec e a taxa de quadros para o vídeo de saída
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-fps = int(videoCaptureInput.get(cv2.CAP_PROP_FPS))
-videoCaptureOutput = cv2.VideoWriter("output.mp4", fourcc, fps, (output_width, output_height))
+# Defina o nome a ser usado se nenhuma correspondência for encontrada
+unknown_name = "Desconhecido"
 
-# Função para calcular a similaridade entre duas codificações de rosto
-def calculate_similarity(encoding1, encoding2):
-    return np.linalg.norm(encoding1 - encoding2)
+# Defina o arquivo de vídeo de saída
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+fps = int(video_capture_input.get(cv2.CAP_PROP_FPS))
+frame_width = int(video_capture_input.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(video_capture_input.get(cv2.CAP_PROP_FRAME_HEIGHT))
+video_capture_output = cv2.VideoWriter("output.mp4", fourcc, fps, (frame_width, frame_height))
 
-# Gera reconhecimento em vídeo para todos os frames
+# Gere o reconhecimento em vídeo para todos os frames
 while True:
     # Para cada frame
-    success, frame = videoCaptureInput.read()
-        
-    # Se chegou ao fim do vídeo, saia do loop
+    success, frame = video_capture_input.read()
+
+    # Se o vídeo acabou, saia do loop
     if not success:
         break
 
-    # Converta o frame de formato BGR (OpenCV) para RGB
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    # Detecte as faces no frame usando um classificador em cascata
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    # Converta o frame para escala de cinza para detecção de faces
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-    names = []
+    # Detecte as faces no frame
+    faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
     # Para cada face detectada
     for (x, y, w, h) in faces:
-        # Extraia a região do rosto
-        face_roi = rgb_frame[y:y+h, x:x+w]
+        face_roi = gray_frame[y:y+h, x:x+w]
 
-        # Redimensione a imagem da face para o tamanho desejado
-        face_roi = cv2.resize(face_roi, (100, 100))
+        # Use o DeepFace para calcular o encoding da face detectada
+        detected_face = DeepFace.analyze(frame, actions=['deep_face'])
+        if len(detected_face) > 0:
+            detected_encoding = detected_face[0]['deep_face']
 
-        # Calcule as características da face
-        hist = cv2.calcHist([face_roi], [0], None, [256], [0, 256])
-        hist /= hist.sum()
-        features = hist.flatten()
+            # Compare o encoding da face detectada com os encodings conhecidos
+            distance_leon = DeepFace.distance([detected_encoding], data_encoding["encodings_leon"])
+            distance_nilce = DeepFace.distance([detected_encoding], data_encoding["encodings_nilce"])
 
-        # Compare com as características conhecidas
-        similarities = [calculate_similarity(features, known_encoding) for known_encoding in data_encoding["encodings"]]
-        min_similarity = min(similarities)
+            # Determine a pessoa correspondente com base na menor distância
+            if min(distance_leon, distance_nilce) <= 0.6:  # Ajuste o limiar conforme necessário
+                if distance_leon < distance_nilce:
+                    recognized_name = "Leon"
+                else:
+                    recognized_name = "Nilce"
+            else:
+                recognized_name = unknown_name
 
-        # Defina um limiar de correspondência (ajuste conforme necessário)
-        match_threshold = 0.5
-
-        if min_similarity <= match_threshold:
-            matched_index = similarities.index(min_similarity)
-            name = data_encoding["names"][matched_index]
-        else:
-            name = "Desconhecido"
-
-        names.append(name)
-
-        # Desenhe o retângulo e escreva o nome da pessoa no frame
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 4)
-        cv2.putText(frame, name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # Desenhe um retângulo e adicione o nome ao frame
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 4)
+            cv2.putText(frame, recognized_name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     # Escreva o frame no arquivo de vídeo de saída
-    videoCaptureOutput.write(frame)
+    video_capture_output.write(frame)
 
-# Libere os recursos
-videoCaptureInput.release()
-videoCaptureOutput.release()
-cv2.destroyAllWindows()
+# Libere os objetos de captura e gravação de vídeo
+video_capture_input.release()
+video_capture_output.release()
