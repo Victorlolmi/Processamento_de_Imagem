@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import tempfile
 from deepface import DeepFace
 import pickle
+from tqdm import tqdm
 
 # pip install deepface pandas opencv-python-headless
 
@@ -123,46 +124,17 @@ for i, face in enumerate(Leon_faces):
 
 #plt.show()
 
-
-def calculate_face_features(image_path, face_cascade):
-    img = cv2.imread(image_path)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # Detecte as faces na imagem usando o modelo Haar Cascade
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
-    if len(faces) == 1:
-        x, y, w, h = faces[0]
-        face_roi = gray[y:y + h, x:x + w]
-
-        # Redimensione a imagem da face para o tamanho desejado
-        face_roi = cv2.resize(face_roi, (100, 100))
-
-        # Calcule uma característica simples (por exemplo, histograma de intensidades)
-        hist = cv2.calcHist([face_roi], [0], None, [256], [0, 256])
-
-        # Normaliza o histograma
-        hist /= hist.sum()
-
-        # Transforme o histograma em uma lista unidimensional
-        features = hist.flatten()
-        return features
-    else:
-        return None
-
-
-
 # Função para calcular os encodings faciais de uma pasta de imagens usando DeepFace
 def calculate_face_encodings(folder_name):
     known_encodings = []
     known_names = []
-
+    print("Na funcao")
     for filename in os.listdir(folder_name):
         image_path = os.path.join(folder_name, filename)
-
+        
         # Use o DeepFace para calcular os encodings faciais
         detected_faces = DeepFace.analyze(image_path, actions=['deep_face'], enforce_detection=False)
-
+        print(detected_faces)
         if len(detected_faces) > 0:
             # Acesse as características faciais diretamente
             detected_encoding = detected_faces[0]
@@ -187,6 +159,7 @@ encodings_nilce, names_nilce = calculate_face_encodings(folder_name_nilce)
 # Salve os encodings e nomes em um arquivo
 data_encoding = {"encodings_leon": encodings_leon, "names_leon": names_leon, "encodings_nilce": encodings_nilce, "names_nilce": names_nilce}
 
+# Escreve em binario
 with open("face_encodings.pkl", "wb") as f:
     pickle.dump(data_encoding, f)
 
@@ -194,7 +167,7 @@ with open("face_encodings.pkl", "wb") as f:
 data_encoding = pickle.load(open("face_encodings.pkl", "rb"))
 
 # Carregue o vídeo do disco
-video_filename = "ReconhecimentoFacial/download/leon&nilce.mp4"
+video_filename = "ReconhecimentoFacial/download/leon.mp4"
 video_capture_input = cv2.VideoCapture(video_filename)
 
 # Inicialize o classificador Haar Cascade para detecção de faces
@@ -214,27 +187,25 @@ video_capture_output = cv2.VideoWriter("output.mp4", fourcc, fps, (frame_width, 
 while True:
     # Para cada frame
     success, frame = video_capture_input.read()
-
+    #print(success)
+    #print(frame)
     # Se o vídeo acabou, saia do loop
     if not success:
         break
-
-    # Converta o frame para escala de cinza para detecçãoigu de faces
-    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
+    
     # Detecte as faces no frame
-    faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    faces = face_cascade.detectMultiScale(frame, scaleFactor=1.05, minNeighbors=3, minSize=(10, 10))
 
     # Para cada face detectada
     # No loop principal do vídeo
     for (x, y, w, h) in faces:
-        face_roi = gray_frame[y:y+h, x:x+w]
-
         # Use o DeepFace para calcular o encoding da face detectada
         detected_face = DeepFace.analyze(frame, actions=['deep_face'])
-        if 'deep_face' in detected_face:
-            detected_encoding = detected_face['deep_face']
+        print(detected_face)
 
+        if detected_face:
+            detected_encoding = detected_face['deep_face']
+            print("entrou no if")
             # Compare o encoding da face detectada com os encodings conhecidos
             encoding_leon = data_encoding["encodings_leon"]
             encoding_nilce = data_encoding["encodings_nilce"]
@@ -243,7 +214,7 @@ while True:
             distance_nilce = np.linalg.norm(detected_encoding - encoding_nilce)
 
             # Determine a pessoa correspondente com base na menor distância
-            if min(distance_leon, distance_nilce) <= 0.6:  # Ajuste o limiar conforme necessário
+            if min(distance_leon, distance_nilce) <= 0.5:  # Ajuste o limiar conforme necessário
                 if distance_leon < distance_nilce:
                     recognized_name = "Leon"
                     print("leon encontrado")
