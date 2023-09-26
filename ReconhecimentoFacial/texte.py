@@ -84,7 +84,7 @@ folder_name = 'ReconhecimentoFacial/Past_Leon'
 #Defina um limiar de correspondência (ajuste conforme necessário)
 match = 0.95  # Valor próximo de 1 para correspondências muito parecidas
 
-#leon = generateFolderWithFaces(folder_name, video_path, foto_path, match)
+Leon_faces = generateFolderWithFaces(folder_name, video_path, foto_path, match)
 
 #Nilce
 
@@ -112,7 +112,16 @@ for i, face in enumerate(Nilce_faces):
     axes[i].axis('off')
 
 #plt.show()
+# Mostrar as imagens das faces detectadas usando o matplotlib
+num_faces = len(Leon_faces)
+fig, axes = plt.subplots(nrows=1, ncols=num_faces, figsize=(16, 4))
 
+for i, face in enumerate(Leon_faces):
+    axes[i].imshow(cv2.cvtColor(face, cv2.COLOR_BGR2RGB))
+    axes[i].set_title(f'{i + 1}')
+    axes[i].axis('off')
+
+#plt.show()
 
 
 def calculate_face_features(image_path, face_cascade):
@@ -142,6 +151,7 @@ def calculate_face_features(image_path, face_cascade):
         return None
 
 
+
 # Função para calcular os encodings faciais de uma pasta de imagens usando DeepFace
 def calculate_face_encodings(folder_name):
     known_encodings = []
@@ -153,12 +163,18 @@ def calculate_face_encodings(folder_name):
         # Use o DeepFace para calcular os encodings faciais
         detected_faces = DeepFace.analyze(image_path, actions=['deep_face'], enforce_detection=False)
 
-        if 'deep_face' in detected_faces:
+        if len(detected_faces) > 0:
+            # Acesse as características faciais diretamente
+            detected_encoding = detected_faces[0]
+
             # Adicione os encodings e nomes conhecidos
-            known_encodings.append(detected_faces['deep_face'])
+            known_encodings.append(detected_encoding)
             known_names.append(filename.split('.')[0])  # Use o nome do arquivo como o nome conhecido
+        else:
+            print(f"Não foi possível detectar uma face em: {image_path}")
 
     return known_encodings, known_names
+
 
 # Diretórios das pastas com as imagens de referência
 folder_name_leon = 'ReconhecimentoFacial/Past_Leon'
@@ -203,31 +219,37 @@ while True:
     if not success:
         break
 
-    # Converta o frame para escala de cinza para detecção de faces
+    # Converta o frame para escala de cinza para detecçãoigu de faces
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Detecte as faces no frame
     faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
     # Para cada face detectada
+    # No loop principal do vídeo
     for (x, y, w, h) in faces:
         face_roi = gray_frame[y:y+h, x:x+w]
 
         # Use o DeepFace para calcular o encoding da face detectada
         detected_face = DeepFace.analyze(frame, actions=['deep_face'])
-        if len(detected_face) > 0:
-            detected_encoding = detected_face[0]['deep_face']
+        if 'deep_face' in detected_face:
+            detected_encoding = detected_face['deep_face']
 
             # Compare o encoding da face detectada com os encodings conhecidos
-            distance_leon = DeepFace.distance([detected_encoding], data_encoding["encodings_leon"])
-            distance_nilce = DeepFace.distance([detected_encoding], data_encoding["encodings_nilce"])
+            encoding_leon = data_encoding["encodings_leon"]
+            encoding_nilce = data_encoding["encodings_nilce"]
+
+            distance_leon = np.linalg.norm(detected_encoding - encoding_leon)
+            distance_nilce = np.linalg.norm(detected_encoding - encoding_nilce)
 
             # Determine a pessoa correspondente com base na menor distância
             if min(distance_leon, distance_nilce) <= 0.6:  # Ajuste o limiar conforme necessário
                 if distance_leon < distance_nilce:
                     recognized_name = "Leon"
+                    print("leon encontrado")
                 else:
                     recognized_name = "Nilce"
+                    print("Nilce encontrada")
             else:
                 recognized_name = unknown_name
 
