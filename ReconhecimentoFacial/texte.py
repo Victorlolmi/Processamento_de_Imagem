@@ -7,7 +7,7 @@ from deepface import DeepFace
 import pickle
 from tqdm import tqdm
 
-# pip install deepface pandas opencv-python-headless
+# pip install deepface pandas opencv-python-headless matplotlib
 
 
 def generateFolderWithFaces(output_folder, video_path, target_image_path, match_threshold, threshold_faces=20, step_frame=50):

@@ -1,4 +1,3 @@
-
 import os
 import cv2
 import numpy as np
@@ -6,110 +5,112 @@ import matplotlib.pyplot as plt
 import tempfile
 from deepface import DeepFace
 import pickle
+from tqdm import tqdm
+import imageio
 
-# pip install deepface pandas opencv-python-headless
+'''
+img1 = "ReconhecimentoFacial\Past_Leon\img1.jpg"
+img2 = "ReconhecimentoFacial\Past_Leon\img2.jpg"
+folder_path = "ReconhecimentoFacial\Past_Leon"
+result = DeepFace.find(img1,folder_path, enforce_detection=False)
 
+print(result)
 
-def generateFolderWithFaces(output_folder, video_path, target_image_path, match_threshold, threshold_faces=20, step_frame=50):
-    detected_faces_list = []  # Lista para armazenar as faces detectadas
-    detected_faces_counter = 0
-    frame_counter = 0
+'''
+# Carregue o vídeo do disco
+video_filename = "ReconhecimentoFacial/download/leon&nilce_curto.mp4"
+video_capture_input = cv2.VideoCapture(video_filename)
 
-    # Carregue a imagem alvo
-    target_image = cv2.imread(target_image_path)
+# Defina o nome a ser usado se nenhuma correspondência for encontrada
+unknown_name = "Desconhecido"
 
-    # Carregue o vídeo
-    cap = cv2.VideoCapture(video_path)
+# Defina o arquivo de vídeo de saída
+fps = int(video_capture_input.get(cv2.CAP_PROP_FPS))
+video_capture_output = imageio.get_writer("output.mp4", fps = fps)
 
-    while cap.isOpened():
-        # Contabiliza frames
-        frame_counter += 1
+#pasta do leon
 
-        # Pega o próximo frame
-        ret, frame = cap.read()
+target_image_leon = "ReconhecimentoFacial\Past_Leon\img1.jpg"
+target_image_nilce= "ReconhecimentoFacial\Past_Nilce\img1.jpg"
+frame_counter = 0
 
-        # Acabou o vídeo ou detectou o limite de faces?
-        if not ret or detected_faces_counter >= threshold_faces:
-            break
-
-        # "Pula" alguns frames
-        if frame_counter % step_frame != 0:
-            continue
-
-        # Detecte as faces no frame usando DeepFace
-        detected_faces = DeepFace.analyze(frame, actions=['detect_face'], enforce_detection=False)
-
-        if len(detected_faces) > 0:
-            for i, face in enumerate(detected_faces):
-                # Verifique se a face é igual à imagem alvo
-                (x, y, w, h) = (int(face['region']['x']), int(face['region']['y']), int(face['region']['w']), int(face['region']['h']))
-                face_crop = frame[y:y + h, x:x + w]
-
-                # Compara as imagens usando o histograma de cores e a métrica de correlação
-                correlation = cv2.compareHist(cv2.calcHist([target_image], [0], None, [256], [0, 256]),
-                                              cv2.calcHist([face_crop], [0], None, [256], [0, 256]),
-                                              cv2.HISTCMP_CORREL)
-
-                if correlation >= match_threshold:
-                    # Adicionar a face detectada à lista
-                    detected_faces_list.append(face_crop)
-
-                    # Total de faces detectadas até o momento
-                    detected_faces_counter += 1
-                    # Salvar região das faces em uma pasta
-                    img_path = os.path.join(output_folder, f"face_{detected_faces_counter}_{frame_counter}.jpg")
-                    cv2.imwrite(img_path, face_crop)
-
-                    # Adicionar retângulo ao redor da face e marcações para exibir bonitinho
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 4)
-
-    # Fechar o vídeo após processamento
-    cap.release()
-
-    # Retornar a lista de faces detectadas
-    return detected_faces_list
+# Gere o reconhecimento em vídeo para todos os frames
+while True:
+    # Para cada frame
+    success, frame = video_capture_input.read()
 
 
+    frame_counter += 1
 
-#Leon
+    print(frame_counter)
+    # Se o vídeo acabou, saia do loop
+    if not success:
+        break
 
-# Caminho para o vídeo de entrada
-video_path = 'ReconhecimentoFacial/download/leon.mp4'
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-# Caminho para a foto do rosto da pessoa desejada
-foto_path = 'ReconhecimentoFacial/Past_Leon/img1.jpg'
+    '''
+    # "Pula" alguns frames
+    if frame_counter % 2 != 0:
+        continue
+    '''
+   
+    
+    # Detecte as faces do leon no frame 
+    detected_face_leon = DeepFace.verify(frame, target_image_leon, "VGG-Face",enforce_detection=False)
+    #dimencoes do frame do Leon
+    (x_leon, y_leon, w_leon, h_leon) = (int(detected_face_leon['facial_areas']['img1']['x']), int(detected_face_leon['facial_areas']['img1']['y']), int(detected_face_leon['facial_areas']['img1']['w']), int(detected_face_leon['facial_areas']['img1']['h']))
 
-# Pasta para salvar as imagens recortadas
-folder_name = 'ReconhecimentoFacial/Past_Leon'
 
-#Defina um limiar de correspondência (ajuste conforme necessário)
-match = 0.95  # Valor próximo de 1 para correspondências muito parecidas
+    # Detecte as faces da Nilce no frame 
+    detected_face_nilce = DeepFace.verify(frame, target_image_nilce, "VGG-Face",enforce_detection=False)
+    #dimencoes do frame da Nilce
+    (x_nilce, y_nilce, w_nilce, h_nilce) = (int(detected_face_nilce['facial_areas']['img1']['x']), int(detected_face_nilce['facial_areas']['img1']['y']), int(detected_face_nilce['facial_areas']['img1']['w']), int(detected_face_nilce['facial_areas']['img1']['h']))
 
-#leon = generateFolderWithFaces(folder_name, video_path, foto_path, match)
+    if detected_face_leon['verified'] == True and detected_face_leon['similarity_metric'] == "cosine":
 
-#Nilce
+        recognized_name = "Leon"
+        print("Leon reconhecido")
 
-# Caminho para o vídeo de entrada
-video_path = 'ReconhecimentoFacial/download/vid_nilce.mp4'
+        cv2.rectangle(frame, (x_leon, y_leon), (x_leon + w_leon, y_leon + h_leon), (0, 255, 0), 4)
+        cv2.putText(frame, recognized_name, (x_leon, y_leon - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-# Caminho para a foto do rosto da pessoa desejada
-foto_path = 'ReconhecimentoFacial/Past_Nilce/img1.jpg'
+        
+    if detected_face_nilce['verified'] == True and detected_face_nilce['similarity_metric'] == "cosine":
 
-# Pasta para salvar as imagens recortadas
-folder_name = 'ReconhecimentoFacial\Past_Nilce'
+        recognized_name = "Nilce"
 
-#Defina um limiar de correspondência (ajuste conforme necessário)
-match = 0.82  # Valor próximo de 1 para correspondências muito parecidas
+        if h_nilce >= 150 and h_nilce <=  250:
 
-Nilce_faces = generateFolderWithFaces(folder_name, video_path, foto_path, match)
+            print("Nilce reconhecida")
+            print(w_nilce,h_nilce)
 
-# Mostrar as imagens das faces detectadas usando o matplotlib
-num_faces = len(Nilce_faces)
-fig, axes = plt.subplots(nrows=1, ncols=num_faces, figsize=(16, 4))
+            cv2.rectangle(frame, (x_nilce, y_nilce), (x_nilce + w_nilce, y_nilce + h_nilce), (0, 255, 0), 4)
+            cv2.putText(frame, recognized_name, (x_nilce, y_nilce - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-for i, face in enumerate(Nilce_faces):
-    axes[i].imshow(cv2.cvtColor(face, cv2.COLOR_BGR2RGB))
-    axes[i].set_title(f'{i + 1}')
-    axes[i].axis('off')
+        
+    
+    '''
+    if detected_face_leon['verified'] == False and detected_face_nilce['verified'] == False:
 
-plt.show()
+        detected_face = DeepFace.verify(frame, , enforce_detection=False)
+
+        (x, y, w, h) = (int(detected_face['region']['x']), int(detected_face['region']['y']), int(detected_face['region']['w']), int(detected_face['region']['h']))
+
+        recognized_name = unknown_name
+        print("Dexconhecido")
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 4)
+        cv2.putText(frame, recognized_name, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    '''
+        
+    # Escreva o frame no arquivo de vídeo de saída
+    
+    video_capture_output.append_data(frame)
+
+    print("salvando")
+    
+
+# Libere os objetos de captura e gravação de vídeo
+video_capture_input.release()
+video_capture_output.close()
+
