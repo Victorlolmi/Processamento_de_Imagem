@@ -1,35 +1,53 @@
+import numpy as np
 import cv2
 
-# Carregue a imagem principal (imagem maior)
-imagem_principal = cv2.imread('Topico4\imgs\Mountain 4K.jpg')
+def resizeImage(image, scalePercent):
+    width = int(image.shape[1] * scalePercent / 100)
+    height = int(image.shape[0] * scalePercent / 100)
+    image = cv2.resize(image, (width, height))
+    return image
 
-# Carregue a marca d'água (imagem menor)
-marca_dagua = cv2.imread('Topico4\imgs\marcadagua.png', cv2.IMREAD_UNCHANGED)
+def addWatermark(background, watermark, x_offset, y_offset):
+    # Redimensiona a marca d'água para se ajustar à imagem de fundo
+    watermark = resizeImage(watermark, scalePercent=20)
 
-# Obtenha as dimensões da imagem da marca d'água
-altura_marca_dagua, largura_marca_dagua, _ = marca_dagua.shape
+    # Obtém as dimensões da imagem de fundo
+    bg_height, bg_width, _ = background.shape
+    wm_height, wm_width, _ = watermark.shape
 
-# Defina a posição onde você deseja inserir a marca d'água na imagem principal
-posicao_x = 50
-posicao_y = 50
+    # Verifica se o deslocamento não excede os limites da imagem de fundo
+    if x_offset + wm_width > bg_width or y_offset + wm_height > bg_height:
+        print("Erro: Sobreposição com dimensões maiores do que a imagem de fundo.")
+        return None
 
-# Extraia o canal alfa (transparência) da marca d'água
-canal_alpha = marca_dagua[:, :, 3] / 255.0
+    # Cria uma cópia da imagem de fundo para adicionar a marca d'água
+    image_with_watermark = background.copy()
 
-# Copie a região da imagem principal onde a marca d'água será inserida
-regiao_insercao = imagem_principal[posicao_y:posicao_y+altura_marca_dagua, posicao_x:posicao_x+largura_marca_dagua]
+    # Define a região da imagem de fundo onde a marca d'água será adicionada
+    roi = image_with_watermark[y_offset:y_offset + wm_height, x_offset:x_offset + wm_width]
 
-# Aplique a marca d'água à região de inserção usando o canal alfa
-for c in range(0, 3):
-    regiao_insercao[:, :, c] = regiao_insercao[:, :, c] * (1 - canal_alpha) + marca_dagua[:, :, c] * canal_alpha
+    # Cria uma máscara de canal alfa para a marca d'água
+    alpha_channel = watermark[:, :, 3] / 255.0
 
-# Atualize a região de inserção na imagem principal
-imagem_principal[posicao_y:posicao_y+altura_marca_dagua, posicao_x:posicao_x+largura_marca_dagua] = regiao_insercao
+    # Combinando a marca d'água com a imagem de fundo usando a máscara alfa
+    for c in range(0, 3):
+        roi[:, :, c] = (1 - alpha_channel) * roi[:, :, c] + alpha_channel * watermark[:, :, c]
 
-# Salve a imagem resultante
-cv2.imwrite('imagem_com_marca_dagua.jpg', imagem_principal)
+    return image_with_watermark
 
-# Exiba a imagem resultante
-cv2.imshow('Imagem com Marca d\'Água', imagem_principal)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+
+# Carrega a imagem de fundo e a marca d'água
+background = cv2.imread("Topico4\imgs\Mountain 4K.jpg")
+watermark = cv2.imread("Topico4\imgs\marcadagua.png", cv2.IMREAD_UNCHANGED)  # Certifique-se de que a marca d'água tenha um canal alfa
+
+# Define as coordenadas para a sobreposição da marca d'água (ajuste conforme necessário)
+x_offset = 10
+y_offset = 10
+
+# Adiciona a marca d'água à imagem de fundo
+result_image = addWatermark(background, watermark, x_offset, y_offset)
+
+if result_image is not None:
+    # Salva a imagem resultante
+    cv2.imwrite("output_image.png", result_image)
+    print("Marca d'água adicionada com sucesso!")
