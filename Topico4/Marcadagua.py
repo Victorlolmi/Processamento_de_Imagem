@@ -1,53 +1,56 @@
-import numpy as np
 import cv2
+import numpy as np
 
-def resizeImage(image, scalePercent):
-    width = int(image.shape[1] * scalePercent / 100)
-    height = int(image.shape[0] * scalePercent / 100)
-    image = cv2.resize(image, (width, height))
-    return image
+#from matplotlib import pyplot as plt
 
-def addWatermark(background, watermark, x_offset, y_offset):
-    # Redimensiona a marca d'água para se ajustar à imagem de fundo
-    watermark = resizeImage(watermark, scalePercent=20)
+#receb duas imagens e uma se retira as medidas da forma com o .shape e a outra e resized com essas dimenções com .resize
+def resizeEqual(imageSizeFrom, imageSizeTo):
 
-    # Obtém as dimensões da imagem de fundo
-    bg_height, bg_width, _ = background.shape
-    wm_height, wm_width, _ = watermark.shape
+    #Retiramos altura e largura, nao utilizamos o canal
+    height, width , _ = imageSizeFrom.shape
 
-    # Verifica se o deslocamento não excede os limites da imagem de fundo
-    if x_offset + wm_width > bg_width or y_offset + wm_height > bg_height:
-        print("Erro: Sobreposição com dimensões maiores do que a imagem de fundo.")
-        return None
-
-    # Cria uma cópia da imagem de fundo para adicionar a marca d'água
-    image_with_watermark = background.copy()
-
-    # Define a região da imagem de fundo onde a marca d'água será adicionada
-    roi = image_with_watermark[y_offset:y_offset + wm_height, x_offset:x_offset + wm_width]
-
-    # Cria uma máscara de canal alfa para a marca d'água
-    alpha_channel = watermark[:, :, 3] / 255.0
-
-    # Combinando a marca d'água com a imagem de fundo usando a máscara alfa
-    for c in range(0, 3):
-        roi[:, :, c] = (1 - alpha_channel) * roi[:, :, c] + alpha_channel * watermark[:, :, c]
-
-    return image_with_watermark
+    return cv2.resize(imageSizeTo, (int(width), int(height)))
 
 
-# Carrega a imagem de fundo e a marca d'água
-background = cv2.imread("Topico4\imgs\Mountain 4K.jpg")
-watermark = cv2.imread("Topico4\imgs\marcadagua.png", cv2.IMREAD_UNCHANGED)  # Certifique-se de que a marca d'água tenha um canal alfa
+def addImageInBackground(foreground, background):
 
-# Define as coordenadas para a sobreposição da marca d'água (ajuste conforme necessário)
-x_offset = 10
-y_offset = 10
+    #Retiramos da imagem de primeiro plano as dimencoes
+    foreH, foreW, _ = foreground.shape
 
-# Adiciona a marca d'água à imagem de fundo
-result_image = addWatermark(background, watermark, x_offset, y_offset)
+    #Converte para cinza
+    foregroundGray = cv2.cvtColor(foreground, cv2.COLOR_BGR2GRAY)
 
-if result_image is not None:
-    # Salva a imagem resultante
-    cv2.imwrite("output_image.png", result_image)
-    print("Marca d'água adicionada com sucesso!")
+    #Cria uma macara que destacas as areas nao tranparentes(255) e transparentes (0) , o resultado e salvo em maskFore o resto é ignorado
+    rest, maskFore = cv2.threshold(foregroundGray, 75, 255, cv2.THRESH_BINARY)
+    
+    #.bitwise_and aqui funciona como um recort pega apenas as partes onde a mascara e branca (nao transparente)
+    #recorta o fundo no formado da imagem de primeiro plano
+    backWithMask = cv2.bitwise_and(background, background, mask = maskFore)
+    #.bitwise_not inverte os valores da mascara onde era 0 vira 255 e onde era 255 vira 0
+    foreWithMask = cv2.bitwise_not(maskFore)
+    #Pega as partes nao transparente do primeiro plano
+    foreWithMask = cv2.bitwise_and(foreground, foreground, mask = foreWithMask)
+
+    #mistura as duas imagens
+    result = cv2.addWeighted(foreWithMask, 0, backWithMask, 1, 0)
+
+    return result
+
+def main():
+
+    Background_img = cv2.imread('Topico4\imgs\Mountain 4K.jpg')
+    
+    Foreground_img = cv2.imread('Topico4\imgs\A.png')
+  
+    Foreground_img = resizeEqual(Background_img, Foreground_img)
+
+    
+    cv2.imshow("Blended image", addImageInBackground(Foreground_img, Background_img))
+
+    #espera uma tecla ser precionada
+    cv2.waitKey(0)
+    #fecha as janelas abertas
+    cv2.destroyAllWindows()
+ 
+
+main()
