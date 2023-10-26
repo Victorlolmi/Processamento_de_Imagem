@@ -32,8 +32,10 @@ def PeB_histogram():
 
     histogram = cv2.calcHist([gray_img], [0], None, [256], [0,256])
 
-    #plotar o histograma
+    #mostra a imagem cinza
+    cv2.imshow("Imagem cinza", gray_img)
 
+    #plotar o histograma
     plt.figure()
     plt.title("Historgrama de escala de cinza")
     plt.xlabel("Bings")
@@ -41,8 +43,6 @@ def PeB_histogram():
     plt.plot(histogram)
     plt.xlim([0,256])
     plt.show()
-
-    cv2.imshow("Imagem cinza",gray_img)
 
     #espera uma tecla ser precionada 
     cv2.waitKey(0)
@@ -60,15 +60,14 @@ def RGB_histogram():
         plt.plot(histogram, color = color)
         plt.xlim([0,256])
 
+    #Mostra a imagem RGB
+    cv2.imshow("Imagem colorida",RGB_img)
+
     #plotar o histograma
-
-
     plt.title("Historgrama Colorido")
     plt.xlabel("Bings")
     plt.ylabel("# de pixels")
     plt.show()
-
-    cv2.imshow("Imagem colorida",RGB_img)
 
     #espera uma tecla ser precionada 
     cv2.waitKey(0)
@@ -96,7 +95,7 @@ def RGB_histogram_equalization():
     
     RGB_img = cv2.cvtColor(RGB_img, cv2.COLOR_BGR2RGB)
 
-    showImages([RGB_img,ycrcb, equ],['Original', 'Ycrcb', 'Equalizada', ], size=(20,10), grid=(1,3))
+    showImages([RGB_img, ycrcb, equ],['Original', 'Ycrcb', 'Equalizada', ], size=(20,10), grid=(1,3))
 
 PeB_histogram()
 
