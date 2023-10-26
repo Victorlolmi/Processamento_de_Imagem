@@ -1,17 +1,28 @@
 import cv2
+import numpy as np
 
-
+#carrea a img
 original_img = cv2.imread("Topico5\campo_de_flores.jpg")
 
-gray_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2GRAY)
+lowerColor = np.array([0, 0, 0])
+upperColor = np.array([120, 255, 255])
 
-_,thresholded_img = cv2.threshold(gray_img.copy(), 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+#definir a mascara com os valores min e max dados
+mask = cv2.inRange(original_img, lowerColor, upperColor)
 
-mask = thresholded_img
-
+#Compara a mascara com a imagem 
 result = cv2.bitwise_and(original_img, original_img, mask = mask)
 
-cv2.imshow("Imagem limiarizada", result)
+#aplica a limiarizacao 
+gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+_,gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY )
+
+
+
+#mostra a img limiarizada
+cv2.imshow("Imagem limiarizada",gray )
+#mostra a img saida
+cv2.imshow("Imagem saida", result)
 
 #espera uma tecla ser precionada 
 cv2.waitKey(0)

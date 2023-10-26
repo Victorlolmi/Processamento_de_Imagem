@@ -32,7 +32,7 @@ def addImageInBackground(foreground, background):
     foreWithMask = cv2.bitwise_and(foreground, foreground, mask = foreWithMask)
 
     #mistura as duas imagens
-    result = cv2.addWeighted(foreWithMask, 0, backWithMask, 1, 0)
+    result = cv2.add(foreWithMask, backWithMask)
 
     return result
 
