@@ -27,4 +27,4 @@ def showImages(imgsArray, titlesArray, size, grid=(1,1)):
 img1 = cv2.imread("Topico5\old_cartoon.png")
 img2 = cv2.imread("Topico5\original_img.png")
 
-showImages([img1, img2], ["img1", "img2"], size=(10,10), grid=(1,2))
+showImages([img1, img2], ["img1", "img2"], size=(10,10), grid=(1,1))

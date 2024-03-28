@@ -25,16 +25,16 @@ def showImages(imgsArray, titlesArray, size, grid=(1,1)):
     plt.show()
 
 
-
 def cutOutBlack(image):
 
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    imagecopy = image.copy()
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     _ , thresholded_mask = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV |cv2.THRESH_OTSU  )
 
-    image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    imagecopy = cv2.cvtColor(imagecopy, cv2.COLOR_BGR2RGB)
 
-    result = cv2.bitwise_and(image, image, mask = thresholded_mask)
+    result = cv2.bitwise_and(imagecopy, imagecopy, mask = thresholded_mask)
 
     
 

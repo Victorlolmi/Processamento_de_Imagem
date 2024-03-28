@@ -75,8 +75,8 @@ def filtering(gray_image, filter_name):
         print("average, gaussian, median, sobel, laplacian, canny_edge")
 
 
-image = cv2.imread("Topico8\imgs\img_icons.png",0)
+image = cv2.imread("Topico8\imgs\cervo.PNG",0)
 
-filter_name = "canny_edge"
+filter_name = "median"
 
 filtering(image, filter_name)

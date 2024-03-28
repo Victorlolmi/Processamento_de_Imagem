@@ -53,7 +53,7 @@ def showIntensityLevels():
     plt.legend()
     plt.show()
 
-#showIntensityLevels()
+showIntensityLevels()
 
 #comparando o histograma de imagens em uma pasta 
 

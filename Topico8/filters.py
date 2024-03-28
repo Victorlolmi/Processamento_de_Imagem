@@ -28,7 +28,7 @@ def blurFilter(image):
 
     blur_img = cv2.blur(image,(5,5))
 
-    showImages([image, blur_img], ['Original', 'Borrada'], size=(10,10), grid=(1,2))
+    showImages([image, blur_img], ['Original', 'average filter'], size=(10,10), grid=(1,2))
 
     return blur_img
 
@@ -36,7 +36,7 @@ def gaussianFilter(image):
 
     blur_img = cv2.GaussianBlur(image,(5,5),0)
 
-    showImages([image, blur_img], ['Original', 'Borrada'], size=(10,10), grid=(1,2))
+    showImages([image, blur_img], ['Original', 'Gaussian filter'], size=(10,10), grid=(1,2))
 
     return blur_img
     
@@ -80,7 +80,7 @@ def cannyFilter(gray_img, min, max):
 #passa so a baixa frequencia( onde nao se tem muita variacao de cor)
 
 #filtro da media(blur)
-'''
+
 img = cv2.imread("Topico8\imgs\img_icons.png")
 
 blur = blurFilter(img)
@@ -112,8 +112,7 @@ imgxy = cv2.convertScaleAbs(imgxy)
 
 
 showImages([wall_img, imgx, imgy, imgxy],['Original','Sobelx','Sobely','Sobelxy'], size=(10,10), grid=(2,2))
-'''
-'''
+
 #laplaciano 
 
 wall_img = cv2.imread("Topico8\imgs\img_icons.png")
@@ -129,7 +128,6 @@ blur_more_laplacian_img5 = cv2.convertScaleAbs(blur_more_laplacian_img5)
 wall_img = cv2.cvtColor(original, cv2.COLOR_BGR2RGB)
 showImages([wall_img, laplacian_img3, blur_more_laplacian_img3, laplacian_img5, blur_more_laplacian_img5], ['Original', 'Laplacian 3', 'Blur + Laplacian 3', 'Lapacian 5', 'Blur + Laplacian 5'], size=(10,7), grid=(2,3))
 
-'''
 
 #CannyEdga
 wall_img = cv2.imread("Topico8\imgs\img_parede.jpg")

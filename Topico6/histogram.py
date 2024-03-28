@@ -81,7 +81,7 @@ def PeB_histogram_equalization():
     # equaliza o istograma da img
     equalization = cv2.equalizeHist(gray_img)
 
-    showImages([gray_img, equalization], ['Original', 'Equalizada'], size=(7,4), grid=(1,2))
+    showImages([gray_img, equalization], ['Original', 'Equalizada'], size=(10,7), grid=(1,2))
 
 def RGB_histogram_equalization():
 
