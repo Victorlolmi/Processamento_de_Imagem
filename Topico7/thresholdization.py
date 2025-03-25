@@ -25,7 +25,7 @@ def showImages(imgsArray, titlesArray, size, grid=(1,1)):
     plt.show()
 
 
-def cutOutBlack(image):
+"""def cutOutBlack(image):
 
     imagecopy = image.copy()
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -40,7 +40,22 @@ def cutOutBlack(image):
 
 
     return thresholded_mask, result 
+"""
+def cutOutBlack(image):
 
+    imagecopy = image.copy()
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    _ , thresholded_mask = cv2.threshold(image, 190, 255, cv2.THRESH_BINARY  )
+
+    imagecopy = cv2.cvtColor(imagecopy, cv2.COLOR_BGR2RGB)
+
+    result = cv2.bitwise_and(imagecopy, imagecopy, mask = thresholded_mask)
+
+    
+
+
+    return thresholded_mask, result 
 def cutOutWhite(image):
     
     image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -55,17 +70,17 @@ def cutOutWhite(image):
     return thresholded_mask, result 
 
 
-mail = cv2.imread("Topico7\imgs\carta_getulio.jpg")
+mail = cv2.imread("Topico7\imgs\FLIR0196.jpg")
 
 thresholded_img , result= cutOutBlack(mail)
 
 image = cv2.cvtColor(mail, cv2.COLOR_BGR2RGB)
 
 showImages([image, thresholded_img, result], ['Original image', 'Imagem limiarizada', 'Resultado'], size=(10,7) , grid=(1,3))
-
-map_img1 = cv2.imread("Topico7\imgs\img_map1.jpg")
-map_img2 = cv2.imread("Topico7\imgs\img_map2.jpg")
-map_img3 = cv2.imread("Topico7\imgs\img_map3.jpg")
+"""
+map_img1 = cv2.imread("Topico7\imgs\FLIR0196.jpg")
+map_img2 = cv2.imread("Topico7\imgs\FLIR0196.jpg")
+map_img3 = cv2.imread("Topico7\imgs\FLIR0196.jpg")
 
 #map1
 thresholded_img1, result1 = cutOutWhite(map_img1)
@@ -86,3 +101,4 @@ showImages([map_img3, thresholded_img3, result3], ['Mapa 3', 'Limiarizada', 'Res
 #allmaps
 showImages([map_img1, thresholded_img1, result1, map_img2, thresholded_img2, result2, map_img3, thresholded_img3, result3 ], ['Mapa 1', 'Limiarizada', 'Resultado', 'Mapa 2', 'Limiarizada', 'Resultado','Mapa 3', 'Limiarizada', 'Resultado'], size=(10,7) , grid=(3,3))
 
+"""

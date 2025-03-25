@@ -1,5 +1,5 @@
 import subprocess
 
-url = "https://www.youtube.com/watch?v=rKnt7bBQf_Y"
+url = "https://www.youtube.com/watch?v=rBjHYJUrBOg"
 #
-subprocess.run(["youtube-dlc", url])
+subprocess.run(["yt-dlp", url])
